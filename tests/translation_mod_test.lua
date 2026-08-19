@@ -14,6 +14,12 @@ local expected = {
   yellow = { text = 2706, strings = 960, pokemon = 151, moves = 165, items = 152, trainers = 47 },
   gold = { text = 3042, strings = 960, pokemon = 251, moves = 251, items = 247, trainers = 562 },
 }
+local dialogSpecies = {
+  red = { id = "_OaksLabYouWantBulbasaurText", source = "BULBASAUR", translated = "Light Paragon" },
+  blue = { id = "_OaksLabYouWantBulbasaurText", source = "BULBASAUR", translated = "Light Paragon" },
+  yellow = { id = "MelanieText1", source = "BULBASAUR", translated = "Light Paragon" },
+  gold = { id = "54:41b5", source = "ZUBAT", translated = "Switch" },
+}
 
 local function size(values)
   local count = 0
@@ -71,6 +77,9 @@ for _, version in ipairs({ "red", "blue", "yellow", "gold" }) do
     assert(applied.text["_AIBattleUseItemText"]:find("{RAM:wTrainerName}", 1, true), version .. " lost a runtime placeholder")
     assert(applied.text["_AIBattleUseItemText"]:find("\n", 1, true), version .. " lost a text control")
   end
+  local row = dialogSpecies[version]
+  assert(applied.text[row.id]:find(row.translated, 1, true), version .. " dialogue species name was not translated")
+  assert(not applied.text[row.id]:find(row.source, 1, true), version .. " dialogue retained the original species name")
   for _, name in ipairs({ "pokemon", "moves", "items", "trainers" }) do
     assert(size(applied[name]) == expected[version][name], version .. " " .. name .. " catalog size changed")
     for _, value in pairs(applied[name]) do

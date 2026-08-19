@@ -6,6 +6,8 @@ This content mod replaces every text row exposed by the imported Pokémon Red, B
 
 Title, start, party, and option menu rows are passed through the same catalog on Red, Blue, Yellow, and Gold, including menu labels that the Gold UI normally renders as raw literals.
 
+Species names embedded directly in dialogue and engine strings are replaced with their translated catalog values as well as names generated through runtime buffers.
+
 The same relay is applied to the extracted Pokémon, move, item, and trainer names. The runtime control codes, format directives, placeholders, record IDs, and original spacing around those controls are preserved. The supplied Gen 1 and Gold data exports do not contain an ability-name registry; Gen 1 has no ability system, so there is no ability table available to patch.
 
 The catalogs are generated before packaging, so the game does not need an internet connection. Missing or unsafe entries remain English and the mod does not include ROMs or save files.

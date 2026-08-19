@@ -1,4 +1,13 @@
 local NAMED_CATALOGS = { "pokemon", "moves", "items", "trainers" }
+local DISPLAY_NAME_ALIASES = {
+  FARFETCHD = "FARFETCH'D",
+  FARFETCH_D = "FARFETCH'D",
+  MR_MIME = "MR.MIME",
+  MR__MIME = "MR.MIME",
+  NIDORAN_F = "NIDORAN♀",
+  NIDORAN_M = "NIDORAN♂",
+  HO_OH = "HO-OH",
+}
 
 local function loadVersionModule()
   local names = { "src.core.GameVersion", "src.gen2.core.GameVersion" }
@@ -40,12 +49,61 @@ local function readCatalog(mod, name)
   return catalog
 end
 
-local function applyCatalog(registry, catalog)
+local function isAsciiWordCharacter(value)
+  if value == "" then return false end
+  local byte = value:byte()
+  return (byte >= 48 and byte <= 57)
+    or (byte >= 65 and byte <= 90)
+    or (byte >= 97 and byte <= 122)
+    or byte == 95
+end
+
+local function replaceSpeciesToken(value, source, replacement)
+  local offset = 1
+  while true do
+    local start, finish = value:find(source, offset, true)
+    if not start then return value end
+    local before = value:sub(start - 1, start - 1)
+    local after = value:sub(finish + 1, finish + 1)
+    if not isAsciiWordCharacter(before) and not isAsciiWordCharacter(after) then
+      value = value:sub(1, start - 1) .. replacement .. value:sub(finish + 1)
+      offset = start + #replacement
+    else
+      offset = finish + 1
+    end
+  end
+end
+
+local function speciesReplacements(catalog)
+  local replacements = {}
+  for id, value in pairs(catalog or {}) do
+    if type(id) == "string" and type(value) == "string" and value ~= "" then
+      local source = DISPLAY_NAME_ALIASES[id] or id
+      if source ~= value then
+        replacements[#replacements + 1] = { source = source, value = value }
+      end
+    end
+  end
+  table.sort(replacements, function(left, right)
+    return #left.source > #right.source
+  end)
+  return replacements
+end
+
+local function translateSpeciesNames(value, replacements)
+  for _, replacement in ipairs(replacements) do
+    value = replaceSpeciesToken(value, replacement.source, replacement.value)
+  end
+  return value
+end
+
+local function applyCatalog(registry, catalog, pokemonCatalog)
   if not registry then return 0 end
+  local replacements = speciesReplacements(pokemonCatalog)
   local count = 0
   for id, value in pairs(catalog) do
     if type(id) == "string" and type(value) == "string" and value ~= "" then
-      registry:override(id, value)
+      registry:override(id, translateSpeciesNames(value, replacements))
       count = count + 1
     end
   end
@@ -93,9 +151,10 @@ end
 
 return function(mod)
   local version = activeVersion()
-  local textCount = applyCatalog(mod.content.text, readCatalog(mod, version))
+  local pokemonCatalog = readCatalog(mod, version .. "_pokemon")
+  local textCount = applyCatalog(mod.content.text, readCatalog(mod, version), pokemonCatalog)
   local stringCatalog = readCatalog(mod, "strings")
-  local stringCount = applyCatalog(mod.content.strings, stringCatalog)
+  local stringCount = applyCatalog(mod.content.strings, stringCatalog, pokemonCatalog)
   installMenuHooks(mod, stringCatalog)
   local namedCounts = {}
   for _, name in ipairs(NAMED_CATALOGS) do
