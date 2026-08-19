@@ -59,9 +59,10 @@ local function isAsciiWordCharacter(value)
 end
 
 local function replaceSpeciesToken(value, source, replacement)
+  local foldedSource = source:lower()
   local offset = 1
   while true do
-    local start, finish = value:find(source, offset, true)
+    local start, finish = value:lower():find(foldedSource, offset, true)
     if not start then return value end
     local before = value:sub(start - 1, start - 1)
     local after = value:sub(finish + 1, finish + 1)
@@ -83,6 +84,11 @@ local function speciesReplacements(catalog)
         replacements[#replacements + 1] = { source = source, value = value }
       end
     end
+  end
+  local genericNidoran = catalog and (catalog.NIDORAN_F or catalog.NIDORAN_M)
+  if type(genericNidoran) == "string" and genericNidoran ~= "" then
+    genericNidoran = genericNidoran:gsub("♀", ""):gsub("♂", "")
+    replacements[#replacements + 1] = { source = "NIDORAN", value = genericNidoran }
   end
   table.sort(replacements, function(left, right)
     return #left.source > #right.source

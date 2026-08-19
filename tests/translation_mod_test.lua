@@ -15,10 +15,29 @@ local expected = {
   gold = { text = 3042, strings = 960, pokemon = 251, moves = 251, items = 247, trainers = 562 },
 }
 local dialogSpecies = {
-  red = { id = "_OaksLabYouWantBulbasaurText", source = "BULBASAUR", translated = "Light Paragon" },
-  blue = { id = "_OaksLabYouWantBulbasaurText", source = "BULBASAUR", translated = "Light Paragon" },
-  yellow = { id = "MelanieText1", source = "BULBASAUR", translated = "Light Paragon" },
-  gold = { id = "54:41b5", source = "ZUBAT", translated = "Switch" },
+  red = {
+    { id = "_OaksLabYouWantBulbasaurText", source = "BULBASAUR", translated = "Light Paragon" },
+    { id = "_PewterNidoranHouseLittleBoyText", source = "NIDORAN", translated = "What is the need" },
+    { id = "_CeruleanCitySlowbroTurnedAwayText", source = "SlowBro", translated = "Lower me down" },
+    { id = "_PokemonMansionB1FDiaryText", source = "Mewtwo", translated = "Akiri" },
+  },
+  blue = {
+    { id = "_OaksLabYouWantBulbasaurText", source = "BULBASAUR", translated = "Light Paragon" },
+    { id = "_PewterNidoranHouseLittleBoyText", source = "NIDORAN", translated = "What is the need" },
+    { id = "_CeruleanCitySlowbroTurnedAwayText", source = "SlowBro", translated = "Lower me down" },
+    { id = "_PokemonMansionB1FDiaryText", source = "Mewtwo", translated = "Akiri" },
+  },
+  yellow = {
+    { id = "MelanieText1", source = "BULBASAUR", translated = "Light Paragon" },
+    { id = "_PewterNidoranHouseLittleBoyText", source = "NIDORAN", translated = "What is the need" },
+    { id = "_Route17Biker5AfterBattleText", source = "Voltorb", translated = "Walsthorpe" },
+    { id = "_PokemonMansionB1FDiaryText", source = "Mewtwo", translated = "Akiri" },
+  },
+  gold = {
+    { id = "54:41b5", source = "ZUBAT", translated = "Switch" },
+    { id = "5a:400f", source = "NIDORAN", translated = "What is the need" },
+    { id = "51:512d", source = "Miltank", translated = "Barua Pepe I own" },
+  },
 }
 
 local function size(values)
@@ -77,9 +96,10 @@ for _, version in ipairs({ "red", "blue", "yellow", "gold" }) do
     assert(applied.text["_AIBattleUseItemText"]:find("{RAM:wTrainerName}", 1, true), version .. " lost a runtime placeholder")
     assert(applied.text["_AIBattleUseItemText"]:find("\n", 1, true), version .. " lost a text control")
   end
-  local row = dialogSpecies[version]
-  assert(applied.text[row.id]:find(row.translated, 1, true), version .. " dialogue species name was not translated")
-  assert(not applied.text[row.id]:find(row.source, 1, true), version .. " dialogue retained the original species name")
+  for _, row in ipairs(dialogSpecies[version]) do
+    assert(applied.text[row.id]:find(row.translated, 1, true), version .. " dialogue species name was not translated")
+    assert(not applied.text[row.id]:lower():find(row.source:lower(), 1, true), version .. " dialogue retained the original species name")
+  end
   for _, name in ipairs({ "pokemon", "moves", "items", "trainers" }) do
     assert(size(applied[name]) == expected[version][name], version .. " " .. name .. " catalog size changed")
     for _, value in pairs(applied[name]) do
